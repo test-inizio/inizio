@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Google Search Extractor</title>
+</head>
+<body>
+    <h1>Google Search Extractor</h1>
+    <form id="searchForm">
+        <input type="text" id="keyword" placeholder="Enter keyword" required>
+        <button type="submit">Search</button>
+    </form>
+    <p id="status"></p>
+    <script>
+        document.getElementById('searchForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const keyword = document.getElementById('keyword').value;
+            document.getElementById('status').textContent = 'Searching...';
+            const response = await fetch('/search', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ keyword })
+            });
+            if (response.ok) {
+                const blob = await response.blob();
+                const link = document.createElement('a');
+                link.href = window.URL.createObjectURL(blob);
+                link.download = 'results.json';
+                link.click();
+                document.getElementById('status').textContent = 'Download complete.';
+            } else {
+                document.getElementById('status').textContent = 'Error occurred.';
+            }
+        });
+    </script>
+</body>
+</html>

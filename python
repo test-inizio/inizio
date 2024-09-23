@@ -1,0 +1,36 @@
+from flask import Flask, request, jsonify, send_file
+from bs4 import BeautifulSoup
+import requests
+import json
+import io
+
+app = Flask(__name__)
+
+@app.route('/search', methods=['POST'])
+def search():
+    data = request.json
+    keyword = data.get('keyword')
+    if not keyword:
+        return jsonify({'error': 'Keyword is required'}), 400
+
+    # Simulace získávání výsledků z Google (pro produkční účely je potřeba použít oficiální API nebo jiný způsob)
+    headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'}
+    response = requests.get(f'https://www.google.com/search?q={keyword}', headers=headers)
+    soup = BeautifulSoup(response.text, 'html.parser')
+
+    results = []
+    for item in soup.select('.tF2Cxc'):
+        title = item.select_one('.DKV0Md').text
+        link = item.select_one('.yuRUbf a')['href']
+        snippet = item.select_one('.aCOpRe span').text
+        results.append({'title': title, 'link': link, 'snippet': snippet})
+
+    # Uložení do souboru
+    output = io.StringIO()
+    json.dump(results, output)
+    output.seek(0)
+
+    return send_file(io.BytesIO(output.getvalue().encode()), mimetype='application/json', as_attachment=True, download_name='results.json')
+
+if __name__ == '__main__':
+    app.run(debug=True)
